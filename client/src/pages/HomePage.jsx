@@ -1,27 +1,29 @@
 import { useEffect, useState } from "react";
-import { getAllPaintings } from "../apis/paintings";
+import supabase from "../supabaseClient";
 import PaintingCard from "../components/PaintingCard";
-import "./HomePage.css"; // 👈 create this new file next
+import "./HomePage.css";
 
 export default function HomePage() {
   const [paintings, setPaintings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllPaintings()
-      .then((res) => {
-        if (Array.isArray(res.data)) {
-          setPaintings(res.data);
-        } else {
-          console.warn("❓ Unexpected data:", res.data);
-          setPaintings([]);
-        }
-      })
-      .catch((err) => {
-        console.error("❌ Error loading paintings:", err);
+    const fetchPaintings = async () => {
+      console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL); // Debug
+
+      const { data, error } = await supabase.from("paintings").select("*");
+
+      if (error) {
+        console.error("❌ Error loading paintings:", error.message);
         setPaintings([]);
-      })
-      .finally(() => setLoading(false));
+      } else {
+        setPaintings(data || []);
+      }
+
+      setLoading(false);
+    };
+
+    fetchPaintings();
   }, []);
 
   return (

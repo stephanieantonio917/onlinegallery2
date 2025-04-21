@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getAllPaintings,
-  deletePainting,
-  updatePainting,
-  createPainting,
-} from "../apis/paintings";
+import supabase from "../supabaseClient";
 
 export default function AdminPage() {
   const [paintings, setPaintings] = useState([]);
@@ -17,33 +12,22 @@ export default function AdminPage() {
     fetchPaintings();
   }, []);
 
-  function fetchPaintings() {
-    getAllPaintings()
-      .then((res) => {
-        const data = res.data;
-        if (Array.isArray(data)) {
-          setPaintings(data);
-        } else if (data?.paintings && Array.isArray(data.paintings)) {
-          setPaintings(data.paintings);
-        } else {
-          console.warn("Unexpected format", data);
-          setPaintings([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load paintings", err);
-        setPaintings([]);
-      })
-      .finally(() => setLoading(false));
+  async function fetchPaintings() {
+    const { data, error } = await supabase.from("paintings").select("*");
+    if (error) {
+      console.error("❌ Failed to load paintings:", error.message);
+      setPaintings([]);
+    } else {
+      setPaintings(data || []);
+    }
+    setLoading(false);
   }
 
-  function handleDelete(painting_id) {
+  async function handleDelete(painting_id) {
     if (window.confirm("Are you sure you want to delete this painting?")) {
-      deletePainting(painting_id)
-        .then(() => {
-          fetchPaintings();
-        })
-        .catch((err) => console.error("Failed to delete painting", err));
+      const { error } = await supabase.from("paintings").delete().eq("painting_id", painting_id);
+      if (error) console.error("❌ Failed to delete:", error.message);
+      else fetchPaintings();
     }
   }
 
@@ -58,22 +42,26 @@ export default function AdminPage() {
     });
   }
 
-  function handleSave() {
-    const saveFn = isAdding ? createPainting : updatePainting;
-    const formData = {
+  async function handleSave() {
+    const normalizedForm = {
       ...form,
-      status: form.status.toLowerCase(), // normalize status to match DB constraint
+      status: form.status.toLowerCase(),
+      price: parseFloat(form.price),
     };
-    const idArg = isAdding ? formData : [editingId, formData];
 
-    (isAdding ? saveFn(formData) : saveFn(...idArg))
-      .then(() => {
-        setEditingId(null);
-        setIsAdding(false);
-        setForm({ title: "", artist: "", price: "", image_url: "", status: "" });
-        fetchPaintings();
-      })
-      .catch((err) => console.error("Failed to save painting", err));
+    if (isAdding) {
+      const { error } = await supabase.from("paintings").insert([normalizedForm]);
+      if (error) return console.error("❌ Failed to create:", error.message);
+    } else {
+      const { error } = await supabase
+        .from("paintings")
+        .update(normalizedForm)
+        .eq("painting_id", editingId);
+      if (error) return console.error("❌ Failed to update:", error.message);
+    }
+
+    handleCancel();
+    fetchPaintings();
   }
 
   function handleCancel() {
@@ -92,6 +80,7 @@ export default function AdminPage() {
     <div style={{ padding: "2rem" }}>
       <h1>🛠️ Admin Page</h1>
       <button onClick={handleAddNew} style={{ marginBottom: "1rem" }}>➕ Add New Painting</button>
+
       {(isAdding || editingId) && (
         <div style={{ marginBottom: "1.5rem", border: "1px solid #ddd", padding: "1rem", borderRadius: "8px", maxWidth: "250px" }}>
           <input
@@ -131,6 +120,7 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
       {loading ? (
         <p>Loading paintings...</p>
       ) : paintings.length === 0 ? (
@@ -168,22 +158,11 @@ export default function AdminPage() {
                   e.target.src = "/fallback.jpg";
                 }}
               />
-              <p>
-                <strong>Artist:</strong> {p.artist}
-              </p>
-              <p>
-                <strong>Price:</strong> ${p.price}
-              </p>
-              <p>
-                <strong>Status:</strong> {p.status}
-              </p>
+              <p><strong>Artist:</strong> {p.artist}</p>
+              <p><strong>Price:</strong> ${p.price}</p>
+              <p><strong>Status:</strong> {p.status}</p>
               <div style={{ marginTop: "1rem" }}>
-                <button
-                  style={{ marginRight: "0.5rem" }}
-                  onClick={() => handleEdit(p)}
-                >
-                  ✏️ Edit
-                </button>
+                <button style={{ marginRight: "0.5rem" }} onClick={() => handleEdit(p)}>✏️ Edit</button>
                 <button onClick={() => handleDelete(p.painting_id)}>🗑️ Delete</button>
               </div>
             </div>
