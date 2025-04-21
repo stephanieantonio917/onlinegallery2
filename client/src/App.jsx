@@ -1,9 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AdminPage from "./pages/AdminPage";
-import _OrdersPage from "./pages/_OrdersPage"   ;
-//github = :(
-;
+import OrderPage from "./pages/OrderPage"; // ✅ match the file you want to keep
 
 export default function App() {
   return (
@@ -11,13 +9,13 @@ export default function App() {
       <nav style={{ padding: "1rem" }}>
         <Link to="/">Home</Link> | <Link to="/admin">Admin</Link> | <Link to="/orders">Orders</Link>
       </nav>
- 
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/orders" element={<OrdersPage />} /> {/* ✅ NEW! */}
+        <Route path="/orders" element={<OrdersPage />} /> {/* ✅ orders route */}
         <Route path="*" element={<p>404 – Page Not Found</p>} />
       </Routes>
-    </Router>   
+    </Router>
   );
 }
