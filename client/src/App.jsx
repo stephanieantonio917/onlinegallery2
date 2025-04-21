@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AdminPage from "./pages/AdminPage";
-import OrderPage from "./pages/OrderPage"; // ✅ match the file you want to keep
+import OrdersPage from "./pages/OrderPage"; // ✅ THIS must match filename exactly
 
 export default function App() {
   return (
@@ -13,7 +13,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/orders" element={<OrdersPage />} /> {/* ✅ orders route */}
+        <Route path="/orders" element={<OrdersPage />} /> {/* ✅ matches import */}
         <Route path="*" element={<p>404 – Page Not Found</p>} />
       </Routes>
     </Router>
