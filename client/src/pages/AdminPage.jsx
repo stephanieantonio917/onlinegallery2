@@ -45,19 +45,27 @@ export default function AdminPage() {
   async function handleSave() {
     const normalizedForm = {
       ...form,
-      status: form.status.toLowerCase(),
+      status: form.status.trim().toLowerCase(),
       price: parseFloat(form.price),
     };
 
+    console.log("📦 Normalized Form:", normalizedForm);
+
     if (isAdding) {
       const { error } = await supabase.from("paintings").insert([normalizedForm]);
-      if (error) return console.error("❌ Failed to create:", error.message);
+      if (error) {
+        console.error("❌ Failed to create:", error.message);
+        return;
+      }
     } else {
       const { error } = await supabase
         .from("paintings")
         .update(normalizedForm)
         .eq("painting_id", editingId);
-      if (error) return console.error("❌ Failed to update:", error.message);
+      if (error) {
+        console.error("❌ Failed to update:", error.message);
+        return;
+      }
     }
 
     handleCancel();
@@ -79,10 +87,20 @@ export default function AdminPage() {
   return (
     <div style={{ padding: "2rem" }}>
       <h1>🛠️ Admin Page</h1>
-      <button onClick={handleAddNew} style={{ marginBottom: "1rem" }}>➕ Add New Painting</button>
+      <button onClick={handleAddNew} style={{ marginBottom: "1rem" }}>
+        ➕ Add New Painting
+      </button>
 
       {(isAdding || editingId) && (
-        <div style={{ marginBottom: "1.5rem", border: "1px solid #ddd", padding: "1rem", borderRadius: "8px", maxWidth: "250px" }}>
+        <div
+          style={{
+            marginBottom: "1.5rem",
+            border: "1px solid #ddd",
+            padding: "1rem",
+            borderRadius: "8px",
+            maxWidth: "250px",
+          }}
+        >
           <input
             type="text"
             placeholder="Title"
@@ -111,12 +129,17 @@ export default function AdminPage() {
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
           >
+            <option value="" disabled>
+              Select status
+            </option>
             <option value="available">Available</option>
             <option value="sold">Sold</option>
           </select>
           <div style={{ marginTop: "0.5rem" }}>
             <button onClick={handleSave}>Save</button>
-            <button onClick={handleCancel} style={{ marginLeft: "0.5rem" }}>Cancel</button>
+            <button onClick={handleCancel} style={{ marginLeft: "0.5rem" }}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -158,11 +181,19 @@ export default function AdminPage() {
                   e.target.src = "/fallback.jpg";
                 }}
               />
-              <p><strong>Artist:</strong> {p.artist}</p>
-              <p><strong>Price:</strong> ${p.price}</p>
-              <p><strong>Status:</strong> {p.status}</p>
+              <p>
+                <strong>Artist:</strong> {p.artist}
+              </p>
+              <p>
+                <strong>Price:</strong> ${p.price}
+              </p>
+              <p>
+                <strong>Status:</strong> {p.status}
+              </p>
               <div style={{ marginTop: "1rem" }}>
-                <button style={{ marginRight: "0.5rem" }} onClick={() => handleEdit(p)}>✏️ Edit</button>
+                <button style={{ marginRight: "0.5rem" }} onClick={() => handleEdit(p)}>
+                  ✏️ Edit
+                </button>
                 <button onClick={() => handleDelete(p.painting_id)}>🗑️ Delete</button>
               </div>
             </div>
